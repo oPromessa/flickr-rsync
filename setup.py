@@ -16,7 +16,8 @@ if (major, minor) < (2, 7) or (major == 3 and minor < 3):
     raise SystemExit("Sorry, Python 2.7, or 3.3 or newer required")
 
 # Load version number into __version__
-execfile('flickr_rsync/_version.py')
+with open(os.path.join('flickr_rsync', '_version.py')) as f:
+    exec(f.read())
 
 from setuptools import setup
 
