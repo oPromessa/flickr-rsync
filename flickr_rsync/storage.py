@@ -1,5 +1,6 @@
 from abc import abstractmethod
 
+
 class Storage(object):
 
     @abstractmethod
@@ -14,6 +15,7 @@ class Storage(object):
     def copy_file(self, file_info, folder_name, dest_storage):
         pass
 
+
 class RemoteStorage(Storage):
 
     @abstractmethod
@@ -23,4 +25,3 @@ class RemoteStorage(Storage):
     @abstractmethod
     def upload(self, src, folder_name, file_name, checksum):
         pass
-

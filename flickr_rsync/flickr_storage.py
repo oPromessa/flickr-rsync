@@ -1,5 +1,6 @@
 from __future__ import print_function
-import os, sys
+import os
+import sys
 import re
 import webbrowser
 import datetime
@@ -18,8 +19,8 @@ About Tags
 ----------
 
 Normal Tags
-With normal tags, the accepted characters for uniqueness checking are [A-Za-z0-9] (in regex form) - so all other 
-characters are stripped out (and uppercase characters are downcased eg: A->a) *but* they're maintained for 
+With normal tags, the accepted characters for uniqueness checking are [A-Za-z0-9] (in regex form) - so all other
+characters are stripped out (and uppercase characters are downcased eg: A->a) *but* they're maintained for
 "viewing" (reading) - a way of maintaining ease of use for users and ease of indexing/searching etc for the system.
 
 Machine Tags
@@ -35,6 +36,7 @@ CHECKSUM_PREFIX = 'checksum:md5'
 EXTENSION_PREFIX = 'flickrrsync:extn'
 OAUTH_PERMISSIONS = 'write'
 logger = logging.getLogger(__name__)
+
 
 class FlickrStorage(RemoteStorage):
 
@@ -55,11 +57,18 @@ class FlickrStorage(RemoteStorage):
         """
         self._authenticate()
 
-        walker = self._resiliently.call(flickr_api.objects.Walker, self._user.getPhotosets)
+        walker = self._resiliently.call(
+            flickr_api.objects.Walker,
+            self._user.getPhotosets)
         for photoset in walker:
             self._photosets[photoset.id] = photoset
-            folder = FolderInfo(id=photoset.id, name=photoset.title.encode('utf-8'))
-            if self._should_include(folder.name, self._config.include_dir, self._config.exclude_dir):
+            folder = FolderInfo(
+                id=photoset.id,
+                name=photoset.title.encode('utf-8'))
+            if self._should_include(
+                    folder.name,
+                    self._config.include_dir,
+                    self._config.exclude_dir):
                 yield folder
 
     def list_files(self, folder):
@@ -67,7 +76,7 @@ class FlickrStorage(RemoteStorage):
         Lists all photos within a photoset
 
         Args:
-            folder: The FolderInfo object of the folder to list (from list_folders), or None to list all photos not 
+            folder: The FolderInfo object of the folder to list (from list_folders), or None to list all photos not
                 in a photoset
 
         Returns:
@@ -92,7 +101,10 @@ class FlickrStorage(RemoteStorage):
         for photo in walker:
             self._photos[photo.id] = photo
             file_info = self._get_file_info(photo)
-            if self._should_include(file_info.name, self._config.include, self._config.exclude):
+            if self._should_include(
+                    file_info.name,
+                    self._config.include,
+                    self._config.exclude):
                 yield file_info
 
     def download(self, file_info, dest_path):
@@ -125,14 +137,15 @@ class FlickrStorage(RemoteStorage):
             KeyError: If the file_info.id is unrecognised
         """
         extension = os.path.splitext(file_name)[1][1:]
-        tags = '{} "{}={}"'.format(self._config.tags, EXTENSION_PREFIX, extension)
+        tags = '{} "{}={}"'.format(
+            self._config.tags, EXTENSION_PREFIX, extension)
         if checksum:
             tags = '{} {}={}'.format(tags, CHECKSUM_PREFIX, checksum)
 
         photo = self._resiliently.call(
             flickr_api.upload,
-            photo_file=src_path, 
-            title=os.path.splitext(file_name)[0], 
+            photo_file=src_path,
+            title=os.path.splitext(file_name)[0],
             tags=tags.strip(),
             is_public=self._config.is_public,
             is_friend=self._config.is_friend,
@@ -142,7 +155,8 @@ class FlickrStorage(RemoteStorage):
         if folder_name:
             photoset = self._get_folder_by_name(folder_name)
             if not photoset:
-                photoset = self._resiliently.call(flickr_api.Photoset.create, title=folder_name, primary_photo=photo)
+                photoset = self._resiliently.call(
+                    flickr_api.Photoset.create, title=folder_name, primary_photo=photo)
                 self._photosets[photoset.id] = photoset
             else:
                 self._resiliently.call(photoset.addPhoto, photo=photo)
@@ -151,24 +165,37 @@ class FlickrStorage(RemoteStorage):
         if isinstance(dest_storage, RemoteStorage):
             temp_file = NamedTemporaryFile()
             self.download(file_info, temp_file.name)
-            dest_storage.upload(temp_file.name, folder_name, file_info.name, file_info.checksum)
+            dest_storage.upload(
+                temp_file.name,
+                folder_name,
+                file_info.name,
+                file_info.checksum)
             temp_file.close()
         else:
             dest = os.path.join(dest_storage.path, folder_name, file_info.name)
             self.download(file_info, dest)
 
     def _get_folder_by_name(self, name):
-        return next((x for x in self._photosets.values() if x.title.encode('utf-8').lower() == name.lower()), None)
+        return next((x for x in self._photosets.values()
+                     if x.title.encode('utf-8').lower() == name.lower()), None)
 
     def _get_file_info(self, photo):
         name = photo.title.encode('utf-8') if photo.title else photo.id
         checksum = None
         extension = None
         if photo.tags:
-            # If we've just pulled the photo, tags is a string, if we've inspected any properties like 'media', it becomes a list
-            tags = photo.tags.split() if isinstance(photo.tags, basestring) else [tag.text for tag in photo.tags]
-            checksum = next((parts[1] for parts in (tag.split('=') for tag in tags) if parts[0] == CHECKSUM_PREFIX), None)
-            extension = next((parts[1] for parts in (tag.split('=') for tag in tags) if parts[0] == EXTENSION_PREFIX), None)
+            # If we've just pulled the photo, tags is a string, if we've
+            # inspected any properties like 'media', it becomes a list
+            tags = photo.tags.split() if isinstance(photo.tags, basestring) else [
+                tag.text for tag in photo.tags]
+            checksum = next(
+                (parts[1] for parts in (
+                    tag.split('=') for tag in tags) if parts[0] == CHECKSUM_PREFIX),
+                None)
+            extension = next(
+                (parts[1] for parts in (
+                    tag.split('=') for tag in tags) if parts[0] == EXTENSION_PREFIX),
+                None)
         if not extension:
             extension = photo.originalformat
         if extension:
@@ -177,17 +204,19 @@ class FlickrStorage(RemoteStorage):
 
     def _should_include(self, name, include_pattern, exclude_pattern):
         return ((not include_pattern or re.search(include_pattern, name, flags=re.IGNORECASE)) and
-            (not exclude_pattern or not re.search(exclude_pattern, name, flags=re.IGNORECASE)))
+                (not exclude_pattern or not re.search(exclude_pattern, name, flags=re.IGNORECASE)))
 
     def _authenticate(self):
         if self._is_authenticated:
             return
 
-        flickr_api.set_keys(api_key = self._config.api_key, api_secret = self._config.api_secret)
+        flickr_api.set_keys(
+            api_key=self._config.api_key,
+            api_secret=self._config.api_secret)
 
         token_path = self._config.locate_datafile(TOKEN_FILENAME)
         if token_path:
-           auth_handler = flickr_api.auth.AuthHandler.load(token_path) 
+            auth_handler = flickr_api.auth.AuthHandler.load(token_path)
 
         else:
             token_path = self._config.default_datafile(TOKEN_FILENAME)
@@ -208,5 +237,6 @@ class FlickrStorage(RemoteStorage):
         except flickr_api.flickrerrors.FlickrError as e:
             print(e.message)
             if e.message == 'The Flickr API keys have not been set':
-                print("Go to http://www.flickr.com/services/apps/create/apply and apply for an API key")
-            sys.exit(1);
+                print(
+                    "Go to http://www.flickr.com/services/apps/create/apply and apply for an API key")
+            sys.exit(1)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os
+import sys
 import unittest
 import time
 import urllib2
@@ -8,10 +9,12 @@ from mock import MagicMock, patch, call
 import helpers
 from flickr_rsync.resiliently import Resiliently
 
+
 class ResilientlyTest(unittest.TestCase):
 
     def setUp(self):
-        self.sleep_patch = patch('flickr_rsync.throttle.time.sleep', create=True)
+        self.sleep_patch = patch(
+            'flickr_rsync.throttle.time.sleep', create=True)
         self.mock_sleep = self.sleep_patch.start()
 
         self.config = MagicMock()
@@ -54,16 +57,25 @@ class ResilientlyTest(unittest.TestCase):
             call('a', b='b'),
             call('a', b='b')
         ])
-        self.assertEqual(self.mock_sleep.call_count, 3,
+        self.assertEqual(
+            self.mock_sleep.call_count,
+            3,
             "Expected call_count of {}, was {}. Recieved {}".format(
-                3, self.mock_sleep.call_count, self.mock_sleep.call_args_list))
+                3,
+                self.mock_sleep.call_count,
+                self.mock_sleep.call_args_list))
 
     def test_should_fail_once_retry_exceeded(self):
         self.config.retry = 2
         self.callback.side_effect = self.throw_errors(3)
         resiliently = Resiliently(self.config)
 
-        self.assertRaises(urllib2.URLError, resiliently.call, self.callback, 'a', b='b')
+        self.assertRaises(
+            urllib2.URLError,
+            resiliently.call,
+            self.callback,
+            'a',
+            b='b')
 
         self.callback.assert_has_calls_exactly([
             call('a', b='b'),
@@ -130,6 +142,6 @@ class ResilientlyTest(unittest.TestCase):
             yield urllib2.URLError('Bang!')
         yield True
 
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
-

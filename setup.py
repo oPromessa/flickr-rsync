@@ -6,7 +6,8 @@ Run with "python setup.py install" to install FlickrAPI
 """
 
 from __future__ import print_function
-import os, sys
+import os
+import sys
 import unittest
 
 # Check the Python version
@@ -19,14 +20,17 @@ execfile('flickr_rsync/_version.py')
 
 from setuptools import setup
 
+
 def readme():
     with open('README.md') as f:
         return f.read()
+
 
 def test_suite():
     test_loader = unittest.TestLoader()
     test_suite = test_loader.discover('tests', pattern='*_test.py')
     return test_suite
+
 
 additional_requires = []
 if os.name == 'nt':
@@ -52,15 +56,15 @@ setup(
         'futures~=3.1.1',
         'backoff~=1.3.1'
     ] + additional_requires,
-    dependency_links = [
-      'https://github.com/alexis-mignon/python-flickr-api/tarball/6f3163b#egg=flickr_api-0.5beta'
+    dependency_links=[
+        'https://github.com/alexis-mignon/python-flickr-api/tarball/6f3163b#egg=flickr_api-0.5beta'
     ],
     tests_require=[
         'mock~=2.0.0'
     ],
     test_suite='setup.test_suite',
     zip_safe=True,
-    entry_points = {
+    entry_points={
         'console_scripts': ['flickr-rsync=flickr_rsync:main'],
     },
     include_package_data=True

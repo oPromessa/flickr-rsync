@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+
 def enumerate_peek(items):
     """
     Wraps an iterator or sequence of items, returning a each item and a flag indicating if there are more items to come
@@ -20,4 +21,3 @@ def enumerate_peek(items):
         except StopIteration:
             yield (current, False)
             return
-

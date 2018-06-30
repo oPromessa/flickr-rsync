@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os
+import sys
 import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/..')
 import helpers
 from flickr_rsync.enumerate_peek import enumerate_peek
+
 
 class EnumeratePeekTest(unittest.TestCase):
 
@@ -12,7 +14,9 @@ class EnumeratePeekTest(unittest.TestCase):
         was_called = False
         for x, has_next in enumerate_peek(mock_generator):
             was_called = True
-        self.assertFalse(was_called, "Expected no enumeration of empty iterator")
+        self.assertFalse(
+            was_called,
+            "Expected no enumeration of empty iterator")
 
     def test_has_next_should_return_true_given_more_items_exist(self):
         mock_generator = iter(range(2))
@@ -32,11 +36,12 @@ class EnumeratePeekTest(unittest.TestCase):
         self.assertEqual(call_count, 3)
 
     def test_should_iterate_over_all_items_given_list(self):
-        my_list = [1,2,3]
+        my_list = [1, 2, 3]
         call_count = 0
         for x, has_next in enumerate_peek(my_list):
             call_count += 1
         self.assertEqual(call_count, 3)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

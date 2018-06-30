@@ -14,6 +14,7 @@ UNICODE_BRANCH = u"│   ".encode('utf-8')
 UNICODE_LAST_BRANCH = "    "
 logger = logging.getLogger(__name__)
 
+
 @extensionmethod(Observable)
 def is_last(source):
     def subscribe(observer):
@@ -34,8 +35,9 @@ def is_last(source):
         return source.subscribe(on_next, observer.on_error, on_completed)
     return AnonymousObservable(subscribe)
 
+
 class TreeWalker(Walker):
-    
+
     def __init__(self, config, storage):
         self._config = config
         self._storage = storage
@@ -48,14 +50,16 @@ class TreeWalker(Walker):
         if self._config.list_sort:
             folderlist = sorted(folderlist, key=lambda x: x.name)
         folders = Observable.from_(folderlist) \
-            .map(lambda f: { 'folder': f })
+            .map(lambda f: {'folder': f})
         if self._config.root_files:
-            folders = folders.start_with({ 'folder': RootFolderInfo() }) 
+            folders = folders.start_with({'folder': RootFolderInfo()})
 
         # Expand folder messages into file messages
         folders = folders.publish().auto_connect(2)
-        files = folders.is_last() \
-            .map(lambda (x, is_last): dict(x, is_last_folder=is_last))
+        files = folders.is_last() .map(
+            lambda x_is_last: dict(
+                x_is_last[0],
+                is_last_folder=x_is_last[1]))
         if not self._config.list_folders:
             files = files.concat_map(lambda x: self._walk_folder(x))
         # Group by folder but still provide a file stream within each group
@@ -67,9 +71,22 @@ class TreeWalker(Walker):
         shown_folder_count = groups \
             .flat_map(lambda g: g.first()) \
             .count(self._not_root)
-        files.count() \
-            .zip(shown_folder_count, all_folder_count, lambda n_files, n_shown, n_all: (n_files, n_shown, n_all - n_shown)) \
-            .subscribe(lambda (n_files, n_shown, n_hidden): self._print_summary(time.time() - start, n_files, n_shown, n_hidden))
+        files.count() .zip(
+            shown_folder_count,
+            all_folder_count,
+            lambda n_files,
+            n_shown,
+            n_all: (
+                n_files,
+                n_shown,
+                n_all -
+                n_shown)) .subscribe(
+            lambda n_files_n_shown_n_hidden: self._print_summary(
+                time.time() -
+                start,
+                n_files_n_shown_n_hidden[0],
+                n_files_n_shown_n_hidden[1],
+                n_files_n_shown_n_hidden[2]))
 
     def _not_root(self, x):
         return not x['folder'].is_root
@@ -91,13 +108,22 @@ class TreeWalker(Walker):
         if self._config.list_sort:
             fileList = sorted(fileList, key=lambda x: x.name)
 
-        return Observable.from_(fileList).is_last() \
-            .map(lambda (f, is_last): dict(msg, file=f, is_last_file=is_last))
+        return Observable.from_(fileList).is_last() .map(
+            lambda f_is_last: dict(msg, file=f_is_last[0], is_last_file=f_is_last[1]))
 
     def _print_folder(self, folder, is_last_folder, **kwargs):
-        print("{}{}".format(UNICODE_LAST_LEAF if is_last_folder else UNICODE_LEAF, folder.name))
+        print(
+            "{}{}".format(
+                UNICODE_LAST_LEAF if is_last_folder else UNICODE_LEAF,
+                folder.name))
 
-    def _print_file(self, file, is_last_file, is_last_folder, is_root_folder, **kwargs):
+    def _print_file(
+            self,
+            file,
+            is_last_file,
+            is_last_folder,
+            is_root_folder,
+            **kwargs):
         folder_prefix = ''
         if not is_root_folder:
             if is_last_folder:
@@ -108,13 +134,27 @@ class TreeWalker(Walker):
         if is_last_file and (not is_root_folder or is_last_folder):
             file_prefix = UNICODE_LAST_LEAF
 
-        print("{}{}{}{}".format(folder_prefix, file_prefix, file.name,
-            " [{:.6}]".format(file.checksum) if file.checksum else ''))
+        print(
+            "{}{}{}{}".format(
+                folder_prefix,
+                file_prefix,
+                file.name,
+                " [{:.6}]".format(
+                    file.checksum) if file.checksum else ''))
         if is_last_file and not is_last_folder:
             print(UNICODE_BRANCH)
 
-    def _print_summary(self, elapsed, file_count, folder_count, hidden_folder_count):
-        logger.info("{} directories{}{} read in {} sec".format(folder_count, 
-            ", {} files".format(file_count) if not self._config.list_folders else "",
-            " (excluding {} empty directories)".format(hidden_folder_count) if hidden_folder_count > 0 else "",
-            round(elapsed, 2)))
+    def _print_summary(
+            self,
+            elapsed,
+            file_count,
+            folder_count,
+            hidden_folder_count):
+        logger.info(
+            "{} directories{}{} read in {} sec".format(
+                folder_count,
+                ", {} files".format(file_count) if not self._config.list_folders else "",
+                " (excluding {} empty directories)".format(hidden_folder_count) if hidden_folder_count > 0 else "",
+                round(
+                    elapsed,
+                    2)))

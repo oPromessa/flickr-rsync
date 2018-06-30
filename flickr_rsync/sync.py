@@ -7,8 +7,9 @@ from root_folder_info import RootFolderInfo
 
 logger = logging.getLogger(__name__)
 
+
 class Sync(object):
-    
+
     def __init__(self, config, src, dest):
         self._config = config
         self._src = src
@@ -23,7 +24,8 @@ class Sync(object):
         start = time.time()
 
         src_folders = self._src.list_folders()
-        dest_folders = {folder.name.lower(): folder for folder in self._dest.list_folders()}
+        dest_folders = {
+            folder.name.lower(): folder for folder in self._dest.list_folders()}
         for src_folder in src_folders:
             dest_folder = dest_folders.get(src_folder.name.lower())
             print(src_folder.name + os.sep)
@@ -35,7 +37,10 @@ class Sync(object):
         if self._config.root_files:
             self._merge_folders(RootFolderInfo(), RootFolderInfo())
 
-        self._print_summary(time.time() - start, self._copy_count, self._skip_count)
+        self._print_summary(
+            time.time() - start,
+            self._copy_count,
+            self._skip_count)
 
     def _copy_folder(self, folder):
         src_files = self._src.list_files(folder)
@@ -46,14 +51,16 @@ class Sync(object):
 
     def _merge_folders(self, src_folder, dest_folder):
         src_files = self._src.list_files(src_folder)
-        dest_files = [file.name.lower() for file in self._dest.list_files(dest_folder)]
+        dest_files = [file.name.lower()
+                      for file in self._dest.list_files(dest_folder)]
         for src_file in src_files:
             path = os.path.join(src_folder.name, src_file.name)
             lower_filename = src_file.name.lower()
             file_exists = lower_filename in dest_files
             # Fix for flickr converting .jpeg to .jpg.
             if lower_filename.endswith(".jpeg"):
-                file_exists = file_exists or "{}.jpg".format(lower_filename[:-5]) in dest_files
+                file_exists = file_exists or "{}.jpg".format(
+                    lower_filename[:-5]) in dest_files
             if not file_exists:
                 self._copy_count += 1
                 self._copy_file(src_folder, src_file, path)
@@ -69,6 +76,9 @@ class Sync(object):
         logger.debug("{}...copied".format(path))
 
     def _print_summary(self, elapsed, files_copied, files_skipped):
-        skipped_msg = ", skipped {} files(s) that already exist".format(files_skipped) if files_skipped > 0 else ''
-        logger.info("\ntransferred {} file(s){} in {} sec".format(files_copied, skipped_msg, round(elapsed, 2)))
-
+        skipped_msg = ", skipped {} files(s) that already exist".format(
+            files_skipped) if files_skipped > 0 else ''
+        logger.info(
+            "\ntransferred {} file(s){} in {} sec".format(
+                files_copied, skipped_msg, round(
+                    elapsed, 2)))

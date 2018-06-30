@@ -1,5 +1,6 @@
 from __future__ import print_function
-import os, sys
+import os
+import sys
 import urllib2
 import logging
 
@@ -15,6 +16,7 @@ from csv_walker import CsvWalker
 
 logger = logging.getLogger(__name__)
 
+
 def _get_storage(config, path):
     if path.lower() == Config.PATH_FLICKR:
         resiliently = Resiliently(config)
@@ -23,18 +25,22 @@ def _get_storage(config, path):
         return FakeStorage(config)
     return LocalStorage(config, path)
 
+
 def _get_walker(config, storage, list_format):
     if list_format == Config.LIST_FORMAT_TREE:
         return TreeWalker(config, storage)
     elif list_format == Config.LIST_FORMAT_CSV:
         return CsvWalker(config, storage)
     else:
-        raise ValueError('Unrecognised value for list-format: {}'.format(list_format))
+        raise ValueError(
+            'Unrecognised value for list-format: {}'.format(list_format))
+
 
 def patch_win_unicode():
     if os.name == 'nt':
         import win_unicode_console
         win_unicode_console.enable()
+
 
 def main():
     patch_win_unicode()

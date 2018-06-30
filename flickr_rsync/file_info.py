@@ -8,4 +8,3 @@ class FileInfo(object):
 
     def __repr__(self):
         return "FileInfo: {{id={}, name={}}}".format(self.id, self.name)
-

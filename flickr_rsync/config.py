@@ -1,5 +1,6 @@
 from __future__ import print_function
-import os, sys
+import os
+import sys
 import ConfigParser
 import argparse
 import logging
@@ -37,8 +38,8 @@ DEFAULTS = {
     'is_public': 0,
     'is_friend': 0,
     'is_family': 0,
-    'verbose': False
-}
+    'verbose': False}
+
 
 class Config(object):
 
@@ -48,50 +49,100 @@ class Config(object):
     PATH_FAKE = 'fake'
 
     def __getattr__(self, name):
-        # Thanks: http://stackoverflow.com/questions/26467564/how-to-copy-all-attributes-of-one-python-object-to-another
+        # Thanks:
+        # http://stackoverflow.com/questions/26467564/how-to-copy-all-attributes-of-one-python-object-to-another
         return getattr(self._args, name)
 
     def read(self):
-        parser = argparse.ArgumentParser(description='A python script to manage synchronising a local directory of photos to flickr', prog=__packagename__)
-        parser.add_argument('src', type=str, nargs='?', 
-                            help='the source directory to copy or list files from, or FLICKR to specify flickr')
-        parser.add_argument('dest', type=str, nargs='?', 
-                            help='the destination directory to copy files to, or FLICKR to specify flickr')
-        parser.add_argument('-l', '--list-only', action='store_true',
-                            help='list the files in --src instead of copying them')
-        parser.add_argument('--list-format', choices=[self.LIST_FORMAT_TREE, self.LIST_FORMAT_CSV],
-                            help='output format for --list-only, TREE for a tree based output or CSV')
-        parser.add_argument('--list-sort', action='store_true',
-                            help='sort alphabetically when --list-only, note that this forces buffering of remote sources so will be slower')
-        parser.add_argument('--list-folders', action='store_true',
-                            help='lists only folders (no files, implies --list-only)')
-        parser.add_argument('-c', '--checksum', action='store_true',
-                            help='calculate file checksums for local files. Print checksum when listing, use checksum for comparison when syncing')
-        parser.add_argument('--include', type=str, metavar='REGEX',
-                            help='include only files matching REGEX. Defaults to media file extensions only')
+        parser = argparse.ArgumentParser(
+            description='A python script to manage synchronising a local directory of photos to flickr',
+            prog=__packagename__)
+        parser.add_argument(
+            'src',
+            type=str,
+            nargs='?',
+            help='the source directory to copy or list files from, or FLICKR to specify flickr')
+        parser.add_argument(
+            'dest',
+            type=str,
+            nargs='?',
+            help='the destination directory to copy files to, or FLICKR to specify flickr')
+        parser.add_argument(
+            '-l',
+            '--list-only',
+            action='store_true',
+            help='list the files in --src instead of copying them')
+        parser.add_argument(
+            '--list-format',
+            choices=[
+                self.LIST_FORMAT_TREE,
+                self.LIST_FORMAT_CSV],
+            help='output format for --list-only, TREE for a tree based output or CSV')
+        parser.add_argument(
+            '--list-sort',
+            action='store_true',
+            help='sort alphabetically when --list-only, note that this forces buffering of remote sources so will be slower')
+        parser.add_argument(
+            '--list-folders',
+            action='store_true',
+            help='lists only folders (no files, implies --list-only)')
+        parser.add_argument(
+            '-c',
+            '--checksum',
+            action='store_true',
+            help='calculate file checksums for local files. Print checksum when listing, use checksum for comparison when syncing')
+        parser.add_argument(
+            '--include',
+            type=str,
+            metavar='REGEX',
+            help='include only files matching REGEX. Defaults to media file extensions only')
         parser.add_argument('--include-dir', type=str, metavar='REGEX',
                             help='include only directories matching REGEX ')
-        parser.add_argument('--exclude', type=str, metavar='REGEX',
-                            help='exclude any files matching REGEX, note this takes precedent over --include')
-        parser.add_argument('--exclude-dir', type=str, metavar='REGEX',
-                            help='exclude any directories matching REGEX, note this takes precedent over --include-dir')
-        parser.add_argument('--root-files', action='store_true',
-                            help='includes roots files (not in a directory or a photoset) in the list or copy')
-        parser.add_argument('-n', '--dry-run', action='store_true',
-                            help='in sync mode, don\'t actually copy anything, just simulate the process and output')
-        parser.add_argument('--throttling', type=float, metavar='SEC',
-                            help='the delay in seconds (may be decimal) before each network call')
-        parser.add_argument('--retry', type=int, metavar='NUM',
-                            help='the number of times to retry a network call (using exponential backoff) before failing')
+        parser.add_argument(
+            '--exclude',
+            type=str,
+            metavar='REGEX',
+            help='exclude any files matching REGEX, note this takes precedent over --include')
+        parser.add_argument(
+            '--exclude-dir',
+            type=str,
+            metavar='REGEX',
+            help='exclude any directories matching REGEX, note this takes precedent over --include-dir')
+        parser.add_argument(
+            '--root-files',
+            action='store_true',
+            help='includes roots files (not in a directory or a photoset) in the list or copy')
+        parser.add_argument(
+            '-n',
+            '--dry-run',
+            action='store_true',
+            help='in sync mode, don\'t actually copy anything, just simulate the process and output')
+        parser.add_argument(
+            '--throttling',
+            type=float,
+            metavar='SEC',
+            help='the delay in seconds (may be decimal) before each network call')
+        parser.add_argument(
+            '--retry',
+            type=int,
+            metavar='NUM',
+            help='the number of times to retry a network call (using exponential backoff) before failing')
         parser.add_argument('--api-key', type=str,
                             help='flickr API key')
         parser.add_argument('--api-secret', type=str,
                             help='flickr API secret')
-        parser.add_argument('--tags', type=str, metavar='"TAG1 TAG2"',
-                            help='space seperated list of tags to apply to uploaded files on flickr')
+        parser.add_argument(
+            '--tags',
+            type=str,
+            metavar='"TAG1 TAG2"',
+            help='space seperated list of tags to apply to uploaded files on flickr')
         parser.add_argument('-v', '--verbose', action='store_true',
                             help='increase verbosity')
-        parser.add_argument('--version', action='version', version='%(prog)s ' + __version__)
+        parser.add_argument(
+            '--version',
+            action='version',
+            version='%(prog)s ' +
+            __version__)
         ini_path = self.locate_datafile(CONFIG_FILENAME)
         parser.set_defaults(**self._read_ini(ini_path))
         self._args = parser.parse_args()
@@ -102,7 +153,12 @@ class Config(object):
         if ini_path:
             logger.debug('using config file {}'.format(ini_path))
             logger.debug('\neffective settings:\n-------------------')
-            logger.debug('\n'.join('{}={}'.format(k,v) for k,v in sorted(vars(self._args).items())))
+            logger.debug(
+                '\n'.join(
+                    '{}={}'.format(
+                        k, v) for k, v in sorted(
+                        vars(
+                            self._args).items())))
             logger.debug('-------------------\n')
         else:
             logger.debug('no config file found, using default settings')
@@ -168,7 +224,7 @@ class Config(object):
         if not config.has_section(FILES_SECTION):
             return
         items = self._read_section(config, FILES_SECTION, {
-            'root_files': bool    
+            'root_files': bool
         })
         options.update(items)
 
@@ -198,4 +254,3 @@ class Config(object):
 
     def _strtobool(self, val):
         return bool(strtobool(val))
-
